@@ -10,13 +10,13 @@ const url = require('url');
 const server = http.createServer(function (req, res) {
 
     // Get the URL and parse it
-    const parsedUrl = url.parse(req.url, true)
-    const urlN = new URL('https://' + req.headers.host + req.url);
-    const pathN = urlN.pathname;
-    const trimmedPathN = pathN.replace(/^\/+|\/+$/g, '');
+    const url = new URL('https://' + req.headers.host + req.url);
     // Get the path
-    // const path = parsedUrl.pathname;
-    // const trimmedPath = path.replace(/^\/+|\/+$/g, '');
+    const path = url.pathname;
+    const trimmedPath = path.replace(/^\/+|\/+$/g, '');
+
+    // Get the query string as an object
+    const queryStringObject = url.search;
 
     // Get the HTTP Method
     const method = req.method.toLowerCase();
@@ -24,7 +24,7 @@ const server = http.createServer(function (req, res) {
     // Send the response
     res.end('Hello World\n');
     // Log the request path
-    console.log(`Request received on path: ${trimmedPathN} with method ${method}`);
+    console.log(`Request received on path: ${trimmedPath} with method ${method} and with these query string parameters ${queryStringObject}`);
 })
 
 // Start the server, and have it listen on port 3000
