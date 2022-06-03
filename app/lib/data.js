@@ -60,7 +60,7 @@ lib.update = function (dir, file, data, callback) {
             const stringData = JSON.stringify(data);
 
             // Truncate the file
-            fs.truncate(fileDescription, function (err){
+            fs.ftruncate(fileDescription, function (err){
                 if(!err) {
                     // Write to the file and close it
                     fs.writeFile(fileDescription, stringData, function (err){
@@ -94,6 +94,21 @@ lib.delete = function (dir, file, callback) {
             callback(false);
         } else {
             callback('Error deleting file');
+        }
+    })
+}
+
+// List all the items in a directory
+lib.list = function (dir, callback){
+    fs.readdir(lib.baseDir+dir+'/', function (err, data){
+        if(!err && data && data.length > 0) {
+            const trimmedFilesNames = [];
+            data.forEach(function (fileName) {
+                trimmedFilesNames.push(fileName.replace('.json', ''))
+            });
+            callback(false, trimmedFilesNames);
+        } else {
+            callback(err, data);
         }
     })
 }

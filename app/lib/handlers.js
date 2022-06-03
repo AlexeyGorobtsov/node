@@ -32,7 +32,7 @@ handlers._users.post = function (data, callback) {
     && data.payload.firstName.trim().length > 0 ? data.payload.firstName.trim() : false;
     const lastName = typeof (data.payload.lastName) === 'string'
     && data.payload.lastName.trim().length > 0 ? data.payload.lastName.trim() : false;
-    const phone = typeof (data.payload.phone) === 'number'
+    const phone = typeof (data.payload.phone) === 'string'
     && String(data.payload.phone).trim().length === 10 ? String(data.payload.phone).trim() : false;
     const password = typeof (data.payload.password) === 'string'
     && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
