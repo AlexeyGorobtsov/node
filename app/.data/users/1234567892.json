@@ -1,11 +1,1 @@
-{
-  "firstName": "Jim",
-  "lastName": "Smith",
-  "phone": "1234567892",
-  "hashPassword": "f29942b7d42481d08c9ee53a1506e13fe41bfae911cd390548e4032f41428c79",
-  "tosAgreement": true,
-  "checks": [
-    "fryqahohofj696fwhw12",
-    "e856ybtgyyd51c28v38v"
-  ]
-}
+{"firstName":"Jim","lastName":"Smith","phone":"1234567892","hashPassword":"f29942b7d42481d08c9ee53a1506e13fe41bfae911cd390548e4032f41428c79","tosAgreement":true,"checks":["fryqahohofj696fwhw12","e856ybtgyyd51c28v38v","eemd04fdcaf65fm3manl","as10a532avmphvnc31ak","ny4nvtwjobzki4nyhmi6"]}
