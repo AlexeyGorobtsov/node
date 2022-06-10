@@ -61,7 +61,7 @@ server.unifiedServer = function (req, res) {
         buffer += decoder.end();
 
         // Choose the handler this request should go to. If one is not found, use the notFound handler
-        const chossenHandler = typeof (server.router[trimmedPath]) !== 'undefined'
+        const chosenHandler = typeof (server.router[trimmedPath]) !== 'undefined'
             ? server.router[trimmedPath]
             : handlers.notFound;
 
@@ -75,7 +75,7 @@ server.unifiedServer = function (req, res) {
         }
 
         // Route the request to the handler specified in the router
-        chossenHandler(data, function (statusCode, payload, contentType) {
+        chosenHandler(data, function (statusCode, payload, contentType) {
 
             // Determine the request to the handler specified in the router
             contentType = typeof contentType === 'string' ? contentType : 'json';
@@ -97,7 +97,6 @@ server.unifiedServer = function (req, res) {
             }
 
             // Return the response-parts that are common to all content-types
-            console.log({payloadString, payload})
             res.writeHead(statusCode);
             res.end(payloadString);
 

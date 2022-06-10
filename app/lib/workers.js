@@ -228,7 +228,7 @@ workers.log = function (originalCheckData, checkOutcome, state, alertWarranted, 
 workers.loop = function () {
     setInterval(function () {
         workers.gatherAllChecks();
-    }, 1000 * 60)
+    }, 1000 * 60 * 60)
 }
 
 // Rotate (compress) the log files
