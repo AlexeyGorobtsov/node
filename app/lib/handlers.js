@@ -18,7 +18,7 @@ const handlers = {};
 
 handlers.index = function (data, callback) {
     // Reject any request that isn't a GET
-    if(data.method  === 'get') {
+    if (data.method === 'get') {
 
         // Prepare data for interpolation
         const templateData = {
@@ -28,11 +28,11 @@ handlers.index = function (data, callback) {
             'body.class': 'index',
         }
         // Read in a template as a string
-        helpers.getTemplate('index', templateData,function (err, str) {
-            if(!err && str) {
+        helpers.getTemplate('index', templateData, function (err, str) {
+            if (!err && str) {
                 // Add the universal header and footer
                 helpers.addUniversalTemplates(str, templateData, function (err, str) {
-                    if(!err && str) {
+                    if (!err && str) {
                         // Return that page as HTML
                         callback(200, str, 'html');
                     } else {
@@ -47,6 +47,62 @@ handlers.index = function (data, callback) {
         callback(405, undefined, 'html');
     }
 }
+
+// Favicon
+handlers.favicon = function (data, callback) {
+    if (data.method === 'get') {
+        // Read in the favicons data
+        helpers.getStaticAsset('favicon.ico', function (err, data) {
+            if (!err && data) {
+                callback(200, data, 'favicon');
+            } else {
+                callback(500)
+            }
+        })
+    } else {
+        callback(405)
+    }
+}
+
+// Public assets
+handlers.public = function (data, callback) {
+    if(data.method === 'get') {
+        // Get the filename being requested
+        const trimmedAssetName = data.trimmedPath.replace('public/', '').trim();
+        if(trimmedAssetName.length > 0) {
+            // Read in the asset's data
+            helpers.getStaticAsset(trimmedAssetName, function (err, data){
+                if(!err && data) {
+                    // Determine the content typ (default to plain text)
+                    let contentType = 'plain';
+                    if(trimmedAssetName.includes('.css')) {
+                        contentType = 'css';
+                    }
+                    if(trimmedAssetName.includes('.png')) {
+                        contentType = 'png';
+                    }
+                    if(trimmedAssetName.includes('.jpg')) {
+                        contentType = 'jpg';
+                    }
+                    if(trimmedAssetName.includes('.ico')) {
+                        contentType = 'favicon';
+                    }
+                    callback(200, data, contentType);
+                } else {
+                    callback(404);
+                }
+            })
+        } else {
+            callback(404);
+        }
+    } else {
+        callback(405);
+    }
+}
+
+/**
+ * JSON API Handlers
+ */
 
 // Users
 handlers.users = function (data, callback) {
@@ -233,25 +289,25 @@ handlers._users.delete = function (data, callback) {
                                 && userData.checks instanceof Array
                                     ? userData.checks : [];
                                 const checksToDelete = userChecks.length;
-                                if(checksToDelete > 0) {
+                                if (checksToDelete > 0) {
                                     let checksDeleted = 0;
                                     let deletionErrors = false;
                                     // Loop through the checks
                                     userChecks.forEach((checkId) => {
-                                       // Delete the check
-                                       _data.delete('checks', checkId, function (err){
-                                          if(err) {
-                                              deletionErrors = true;
-                                          }
-                                          checksDeleted++;
-                                          if(checksDeleted === checksToDelete) {
-                                              if(!deletionErrors) {
-                                                  callback(200);
-                                              } else {
-                                                  callback(500, {Error: 'Errors encountered while attempting to delete all of the user\'s checks. All checks may not have been deleted from the system successfully'})
-                                              }
-                                          }
-                                       });
+                                        // Delete the check
+                                        _data.delete('checks', checkId, function (err) {
+                                            if (err) {
+                                                deletionErrors = true;
+                                            }
+                                            checksDeleted++;
+                                            if (checksDeleted === checksToDelete) {
+                                                if (!deletionErrors) {
+                                                    callback(200);
+                                                } else {
+                                                    callback(500, {Error: 'Errors encountered while attempting to delete all of the user\'s checks. All checks may not have been deleted from the system successfully'})
+                                                }
+                                            }
+                                        });
                                     });
                                 } else {
                                     callback(200);
@@ -693,7 +749,7 @@ handlers._checks.delete = function (data, callback) {
 
                                         // Remove the delete check from their list of checks
                                         const checkPosition = userChecks.indexOf(id);
-                                        if(checkPosition > - 1) {
+                                        if (checkPosition > -1) {
                                             userChecks.splice(checkPosition, 1);
                                             // Re-save the user's data
                                             _data.update('users', checkData.userPhone, userData, function (err) {
