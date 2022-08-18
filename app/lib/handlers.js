@@ -22,8 +22,8 @@ handlers.index = function (data, callback) {
 
         // Prepare data for interpolation
         const templateData = {
-            'head.title': 'This is the title',
-            'head.description': 'This is the meta description',
+            'head.title': 'Uptime Monitoring - Made Simple',
+            'head.description': 'We ofer free, simple uptime monitoring for HTTP/HTTPS sites of all kinds. When your site goes down, we\'ll send you a text to let you know',
             'body.title': 'Hello templated world!',
             'body.class': 'index',
         }
