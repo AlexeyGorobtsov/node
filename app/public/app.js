@@ -58,7 +58,55 @@ app.client.request = function (headers, path, method, queryStringObject, payload
             }
         }
     }
-
+// Send the payload as JSON
     const payloadString = JSON.stringify(payload);
     xhr.send(payloadString);
+}
+
+app.bindForms = function () {
+    document.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formId = this.id;
+        const path = this.action;
+        const method = this.method.toUpperCase();
+        const formData = new FormData(document.querySelector('form'))
+
+        const payload = {}
+        for (const [key, value] of formData.entries()) {
+            if(key === 'tosAgreement') {
+                payload[key] = true;
+            } else {
+                payload[key] = value;
+            }
+        }
+        console.log({formId})
+
+        // Call the API
+        app.client.request(undefined,path, method, undefined,payload, function (statusCode,responsePayload, requestPayload) {
+            if(statusCode !== 200) {
+                console.log('error');
+            } else {
+                app.formResponseProcessor(formId, requestPayload, responsePayload)
+            }
+        })
+    })
+}
+
+// Form response processor
+app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
+    const functionToCall = false;
+    if(formId === 'accountCreate') {
+        console.log('The accountCreate from was successfully submitted');
+        // TODO Do something here now that the account has been created successfully
+    }
+}
+
+// Init (bootstrapping)
+app.init = function () {
+    app.bindForms();
+};
+
+// Call the init processes after the window loads
+window.onload = function () {
+    app.init();
 }
