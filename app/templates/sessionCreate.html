@@ -1,0 +1,23 @@
+<h1>Login to Your Account</h1>
+<h2>Enter your phone number and password</h2>
+
+<div>
+    <form id="sessionCreate"  action="/api/tokens" method="post">
+        <div class="formError"></div>
+        <div class="inputWrapper">
+            <div>
+                Phone Number
+            </div>
+            <input type="text" name="phone" placeholder="(415) 123-456">
+        </div>
+        <div class="inputWrapper">
+            <div class="inputLabel">
+                Your Password
+            </div>
+            <input type="text" name="password" placeholder="*********">
+        </div>
+        <div class="inputWrapper">
+            <button type="submit">Login</button>
+        </div>
+    </form>
+</div>

@@ -49,7 +49,6 @@ handlers.index = function (data, callback) {
 }
 
 // Create Account
-
 handlers.accountCreate = function (data, callback) {
     // Reject any request that isn't a GET
     if (data.method === 'get') {
@@ -62,6 +61,38 @@ handlers.accountCreate = function (data, callback) {
         }
         // Read in a template as a string
         helpers.getTemplate('accountCreate', templateData, function (err, str) {
+            if (!err && str) {
+                // Add the universal header and footer
+                helpers.addUniversalTemplates(str, templateData, function (err, str) {
+                    if (!err && str) {
+                        // Return that page as HTML
+                        callback(200, str, 'html');
+                    } else {
+                        callback(500, undefined, 'html');
+                    }
+                })
+            } else {
+                callback(500, undefined, 'html');
+            }
+        })
+    } else {
+        callback(405, undefined, 'html');
+    }
+}
+
+// Create new Session
+handlers.sessionCreate = function (data, callback) {
+    // Reject any request that isn't a GET
+    if (data.method === 'get') {
+
+        // Prepare data for interpolation
+        const templateData = {
+            'head.title': 'Login to your Account',
+            'head.description': 'Please enter your phone number and password to access your account.',
+            'body.class': 'sessionCreate',
+        }
+        // Read in a template as a string
+        helpers.getTemplate('sessionCreate', templateData, function (err, str) {
             if (!err && str) {
                 // Add the universal header and footer
                 helpers.addUniversalTemplates(str, templateData, function (err, str) {
@@ -384,10 +415,11 @@ handlers._tokens = {};
 // Required data: phone, password
 // Optional data: none
 handlers._tokens.post = function (data, callback) {
-    const phone = typeof (data.payload.phone) === 'number'
+    const phone = typeof (Number(data.payload.phone)) === 'number'
     && String(data.payload.phone).trim().length === 10 ? String(data.payload.phone).trim() : false;
     const password = typeof (data.payload.password) === 'string'
     && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
+    console.log({phone, password})
     if (phone && password) {
         // Lookup the user who mathces that phone number
         _data.read('users', phone, function (err, userData) {
