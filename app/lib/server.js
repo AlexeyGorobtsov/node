@@ -15,7 +15,6 @@ const util = require('util');
 const debug = util.debuglog('server');
 
 // Instantiate the server module object
-
 const server = {};
 
 

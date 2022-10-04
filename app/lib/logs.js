@@ -127,7 +127,6 @@ lib.decompress = function (fileId, callback) {
 }
 
 // Truncate a log file
-
 lib.truncate = function (logId, callback) {
     fs.truncate(lib.baseDir + logId + '.log', 0, function (err) {
         if (!err) {

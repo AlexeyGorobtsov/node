@@ -172,7 +172,6 @@ handlers.public = function (data, callback) {
 handlers.users = function (data, callback) {
     const acceptableMethods = ['post', 'get', 'put', 'delete'];
     if (acceptableMethods.includes(data.method)) {
-        console.log(data.method)
         handlers._users[data.method](data, callback);
     } else {
         callback(405)
@@ -408,7 +407,6 @@ handlers.tokens = function (data, callback) {
 }
 
 // Container for all the tokens methods
-
 handlers._tokens = {};
 
 // Tokens - post
@@ -558,7 +556,6 @@ handlers._tokens.verifyToken = function (id, phone, callback) {
 }
 
 // Checks
-
 handlers.checks = function (data, callback) {
     const acceptableMethods = ['post', 'get', 'put', 'delete'];
     if (acceptableMethods.includes(data.method)) {
@@ -569,13 +566,11 @@ handlers.checks = function (data, callback) {
 }
 
 // Container for all the checks methods
-
 handlers._checks = {};
 
 // Checks - post
 // Required data: protocol, url, method, successCodes, timeoutSeconds
 // Optional data: none
-
 handlers._checks.post = function (data, callback) {
     const protocol = typeof (data.payload.protocol) === 'string'
     && ['https', 'http'].includes(data.payload.protocol) ? String(data.payload.protocol).trim() : false;
@@ -702,7 +697,6 @@ handlers._checks.get = function (data, callback) {
 // Checks - put
 // Required data: id
 // Optional data: protocol, url, method, successCodes, timeoutSeconds (one must be sends);
-
 handlers._checks.put = function (data, callback) {
 // Check for the required field
     const id = typeof (data.payload.id) === 'string'
@@ -784,7 +778,6 @@ handlers._checks.put = function (data, callback) {
 // Checks - delete
 // Required data: id
 // Optional data: none
-
 handlers._checks.delete = function (data, callback) {
     // Check that id is valid
     const id = typeof (data.queryStringObject.id) === 'string'
