@@ -63,8 +63,38 @@ app.client.request = function (headers, path, method, queryStringObject, payload
     xhr.send(payloadString);
 }
 
+// Bind the logout button
+app.bindLogoutButton = function () {
+    document.getElementById('logoutButton').addEventListener('click', function (e) {
+        // Stop it from redirecting anywhere
+        e.preventDefault();
+
+        // Log the user out
+        app.logUserOut();
+    })
+}
+
+// Log the user out then redirect them
+app.logUserOut = function () {
+    // Get the current token id
+    const tokenId = typeof app.config.sessionToken.id === 'string' ? app.config.sessionToken.id : false;
+
+    // Send the current token to the tokens endpoint
+    const queryStringObject = {
+        id: tokenId
+    };
+    app.client.request(undefined, '/api/tokens', 'DELETE', queryStringObject, undefined, function () {
+        // Set the app.config token as false
+        app.setSessionToken(false);
+
+        // Send the user to the logged out page
+        window.location = '/session/deleted';
+
+    })
+}
+
 app.bindForms = function () {
-    if(!document.querySelector('form')) {
+    if (!document.querySelector('form')) {
         return false;
     }
     document.querySelector('form').addEventListener('submit', function (e) {
@@ -77,7 +107,7 @@ app.bindForms = function () {
 
         const payload = {}
         for (const [key, value] of formData.entries()) {
-            if(key === 'tosAgreement') {
+            if (key === 'tosAgreement') {
                 payload[key] = true;
             } else {
                 payload[key] = value;
@@ -86,11 +116,11 @@ app.bindForms = function () {
         console.log({formId})
 
         // Call the API
-        app.client.request(undefined,path, method, undefined,payload, function (statusCode,responsePayload, requestPayload) {
-            if(statusCode !== 200) {
+        app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload, requestPayload) {
+            if (statusCode !== 200) {
                 console.log('error');
             } else {
-                app.formResponseProcessor(formId, requestPayload, responsePayload)
+                app.formResponseProcessor(formId, payload, responsePayload)
             }
         })
     })
@@ -99,44 +129,45 @@ app.bindForms = function () {
 // Form response processor
 app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     const functionToCall = false;
-    console.log({formId})
-    if(formId === 'accountCreate'){
-       // Take the phone and password, and use it to log the user in
+    if (formId === 'accountCreate') {
+        // Take the phone and password, and use it to log the user in
         const newPayload = {
-            phone: responsePayload.phone,
-            password: responsePayload.password,
+            phone: requestPayload.phone,
+            password: requestPayload.password,
         };
 
-        app.client.request(undefined, 'api/tokens', 'POST', undefined, newPayload, function (newStatusCode, newResponsePayload) {
+        app.client.request(undefined, '/api/tokens', 'POST', undefined, newPayload, function (newStatusCode, newResponsePayload) {
             // Display an error on the form if needed
-            if(newStatusCode !== 200) {
+            if (newStatusCode !== 200) {
                 // Set the fromError field with the error text
 
                 // Show (unhide) the form error field on the form
             } else {
                 // If successful, set the token and redirect the user
+                console.log({newResponsePayload})
                 app.setSessionToken(newResponsePayload);
                 window.location = '/checks/all';
-                console.log({newResponsePayload})
             }
         })
     }
 
     // If login was successful, set the token in localstorage and redirect the user
-    if(formId === 'sessionCreate'){
+    if (formId === 'sessionCreate') {
         app.setSessionToken(responsePayload);
-        window.location = '/checks/all';
+        console.log({responsePayload})
+        // window.location = '/checks/all';
     }
 }
 
 // Get the session token from localstorage and set it in the app.config object
 app.getSessionToken = function () {
     const tokenString = localStorage.getItem('token');
-    if(typeof tokenString === 'string') {
+    console.log({tokenString})
+    if (typeof tokenString === 'string') {
         try {
             const token = JSON.parse(tokenString);
             app.config.sessionToken = token;
-            if(typeof  token === "object") {
+            if (typeof token === "object") {
                 app.setLoggedInClass(true);
             } else {
                 app.setLoggedInClass(false);
@@ -150,8 +181,9 @@ app.getSessionToken = function () {
 
 // Set (or remove) the loggedIn class from the body
 app.setLoggedInClass = function (add) {
+    console.log({add})
     const target = document.querySelector('body');
-    if(add) {
+    if (add) {
         target.classList.add('loggedIn');
     } else {
         target.classList.remove('loggedIn');
@@ -163,7 +195,7 @@ app.setSessionToken = function (token) {
     app.config.sessionToken = token;
     const tokenString = JSON.stringify(token);
     localStorage.setItem('token', tokenString);
-    if(typeof token === 'object') {
+    if (typeof token === 'object') {
         app.setLoggedInClass(true);
     } else {
         app.setLoggedInClass(false)
@@ -173,15 +205,15 @@ app.setSessionToken = function (token) {
 // Renew the token
 app.renewToken = function (callback) {
     const currentToken = typeof app.config.sessionToken === 'object' ? app.config.sessionToken : false;
-    if(currentToken) {
+    if (currentToken) {
         // update the token with a new expiration
         const payload = {
             id: currentToken.id,
             extend: true,
         }
-        app.client.request(undefined,'api/token', 'PUT', undefined, payload, function (statusCode, responsePayload) {
+        app.client.request(undefined, '/api/token', 'PUT', undefined, payload, function (statusCode, responsePayload) {
             // Display an error on the form if needed
-            if(statusCode === 200) {
+            if (statusCode === 200) {
                 app.setSessionToken(responsePayload);
                 callback(false);
             } else {
@@ -200,8 +232,8 @@ app.renewToken = function (callback) {
 app.tokenRenewalLoop = function () {
     setInterval(function () {
         app.renewToken(function (err) {
-            if(!err) {
-                console.log("Token renewed successfully @ "+Date.now())
+            if (!err) {
+                console.log("Token renewed successfully @ " + Date.now())
             }
         })
     }, 1000 * 60)
@@ -209,7 +241,17 @@ app.tokenRenewalLoop = function () {
 
 // Init (bootstrapping)
 app.init = function () {
+    // Bind all form submissions
     app.bindForms();
+
+    // Bind logout logout button
+    app.bindLogoutButton();
+
+    // Get the token from localstorage
+    app.getSessionToken();
+
+    // Renew token
+    app.tokenRenewalLoop();
 };
 
 // Call the init processes after the window loads
