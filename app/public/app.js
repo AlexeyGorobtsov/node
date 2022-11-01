@@ -75,23 +75,29 @@ app.bindLogoutButton = function () {
 }
 
 // Log the user out then redirect them
-app.logUserOut = function () {
-    // Get the current token id
-    const tokenId = typeof app.config.sessionToken.id === 'string' ? app.config.sessionToken.id : false;
+app.logUserOut = function(redirectUser){
+    // Set redirectUser to default to true
+    redirectUser = typeof(redirectUser) == 'boolean' ? redirectUser : true;
 
-    // Send the current token to the tokens endpoint
+    // Get the current token id
+    const tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
+
+    // Send the current token to the tokens endpoint to delete it
     const queryStringObject = {
-        id: tokenId
+        'id' : tokenId
     };
-    app.client.request(undefined, '/api/tokens', 'DELETE', queryStringObject, undefined, function () {
+    app.client.request(undefined,'/api/tokens','DELETE',queryStringObject,undefined,function(statusCode,responsePayload){
         // Set the app.config token as false
         app.setSessionToken(false);
 
         // Send the user to the logged out page
-        window.location = '/session/deleted';
+        if(redirectUser){
+            window.location = '/session/deleted';
+        }
 
-    })
-}
+    });
+};
+
 
 app.bindForms = function () {
     if (!document.querySelector('form')) {
@@ -104,7 +110,7 @@ app.bindForms = function () {
             const formId = this.id;
             const path = this.action;
             let method = this.method.toUpperCase();
-            const formData = new FormData(document.querySelector('form'))
+            const formData = new FormData(item)
 
             const payload = {}
             for (const [key, value] of formData.entries()) {
@@ -119,13 +125,35 @@ app.bindForms = function () {
                 }
             }
 
+            // If the method is DELETE, the payload should be a queryStringObject instead
+            const queryStringObject = method === 'DELETE' ? payload : {};
+            console.log({method, payload})
+
             // Call the API
-            app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload, requestPayload) {
-                if (statusCode !== 200) {
-                    console.log('error');
+            app.client.request(undefined, path, method, queryStringObject, payload, function (statusCode, responsePayload, requestPayload) {
+                // Display an error on the form if needed
+                if(statusCode !== 200){
+
+                    if(statusCode === 403){
+                        // log the user out
+                        app.logUserOut();
+
+                    } else {
+
+                        // Try to get the error from the api, or set a default error message
+                        let error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
+
+                        // Set the formError field with the error text
+                        document.querySelector("#"+formId+" .formError").innerHTML = error;
+
+                        // Show (unhide) the form error field on the form
+                        document.querySelector("#"+formId+" .formError").style.display = 'block';
+                    }
                 } else {
-                    app.formResponseProcessor(formId, payload, responsePayload)
+                    // If successful, send to form response processor
+                    app.formResponseProcessor(formId,payload,responsePayload);
                 }
+
             })
         })
     })
@@ -159,14 +187,19 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     // If login was successful, set the token in localstorage and redirect the user
     if (formId === 'sessionCreate') {
         app.setSessionToken(responsePayload);
-        console.log({responsePayload})
-        // window.location = '/checks/all';
+        window.location = '/checks/all';
     }
 
     // If forms saved successfully and they have success messages, show them
     const formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
     if(formsWithSuccessMessages.indexOf(formId) > -1){
         document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
+    }
+
+    // If forms saved successfully and they have success messages, show them
+    if(formId === 'accountEdit3') {
+        app.logUserOut(false);
+        window.location = '/account/deleted'
     }
 }
 
