@@ -97,31 +97,36 @@ app.bindForms = function () {
     if (!document.querySelector('form')) {
         return false;
     }
-    document.querySelector('form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const formId = this.id;
-        const path = this.action;
-        const method = this.method.toUpperCase();
-        const formData = new FormData(document.querySelector('form'))
+    document.querySelectorAll('form').forEach(item => {
+        item.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const formId = this.id;
+            const path = this.action;
+            let method = this.method.toUpperCase();
+            const formData = new FormData(document.querySelector('form'))
 
-        const payload = {}
-        for (const [key, value] of formData.entries()) {
-            if (key === 'tosAgreement') {
-                payload[key] = true;
-            } else {
-                payload[key] = value;
+            const payload = {}
+            for (const [key, value] of formData.entries()) {
+                if(key === '_method') {
+                    method = value;
+                    continue;
+                }
+                if (key === 'tosAgreement') {
+                    payload[key] = true;
+                } else {
+                    payload[key] = value;
+                }
             }
-        }
-        console.log({formId})
 
-        // Call the API
-        app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload, requestPayload) {
-            if (statusCode !== 200) {
-                console.log('error');
-            } else {
-                app.formResponseProcessor(formId, payload, responsePayload)
-            }
+            // Call the API
+            app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload, requestPayload) {
+                if (statusCode !== 200) {
+                    console.log('error');
+                } else {
+                    app.formResponseProcessor(formId, payload, responsePayload)
+                }
+            })
         })
     })
 }
@@ -156,6 +161,12 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
         app.setSessionToken(responsePayload);
         console.log({responsePayload})
         // window.location = '/checks/all';
+    }
+
+    // If forms saved successfully and they have success messages, show them
+    const formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
+    if(formsWithSuccessMessages.indexOf(formId) > -1){
+        document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
     }
 }
 
@@ -227,6 +238,51 @@ app.renewToken = function (callback) {
     }
 }
 
+// Load data on the page
+app.loadDataOnPage = function () {
+    // Get the current page from the body class
+    const bodyClasses = document.querySelector('body').classList;
+    const primaryClass = typeof bodyClasses[0] === "string" ? bodyClasses[0] : false;
+
+    // Logic for account settings page
+    if(primaryClass === 'accountEdit') {
+        app.loadAccountEditPage();
+    }
+};
+
+// Load the account edit page specifically
+app.loadAccountEditPage = function (){
+    // Get the phone number from the current token, or log the user out if none is there
+    const phone = typeof app.config.sessionToken.phone === 'string' ? app.config.sessionToken.phone : false;
+    if(phone) {
+        // Fetch the user data
+        const queryStringObject = {
+            phone: phone,
+        };
+        app.client.request(undefined,'/api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+            console.log({statusCode})
+            if(statusCode === 200) {
+                // Put the data into the forms as values where needed
+                document.querySelector('#accountEdit1 .firstNameInput').value = responsePayload.firstName;
+                document.querySelector('#accountEdit1 .lastNameInput').value = responsePayload.lastName;
+                document.querySelector('#accountEdit1 .displayPhoneInput').value = responsePayload.phone;
+
+                // Put the hidden phone field into both froms
+                const hiddenPhoneInputs = document.querySelectorAll('input.hiddenPhoneNumberInput');
+                Array.from(hiddenPhoneInputs).forEach(item => {
+                    item.value =  responsePayload.phone
+                })
+            } else {
+                // If the request comes back as something other 200, log the user our (on the assumption that the api
+                // is temporarily down or the users token is bad)
+                app.logUserOut();
+            }
+        });
+    } else {
+        app.logUserOut();
+    }
+ }
+
 // Loop to renew token often
 
 app.tokenRenewalLoop = function () {
@@ -252,6 +308,9 @@ app.init = function () {
 
     // Renew token
     app.tokenRenewalLoop();
+
+    // Load data on page
+    app.loadDataOnPage();
 };
 
 // Call the init processes after the window loads

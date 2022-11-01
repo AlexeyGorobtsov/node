@@ -144,6 +144,37 @@ handlers.sessionDeleted = function (data, callback) {
     }
 }
 
+// Edit your account
+handlers.accountEdit = function (data, callback) {
+    // Reject any request that isn't a GET
+    if (data.method === 'get') {
+
+        // Prepare data for interpolation
+        const templateData = {
+            'head.title': 'Account Settings',
+            'body.class': 'accountEdit',
+        }
+        // Read in a template as a string
+        helpers.getTemplate('accountEdit', templateData, function (err, str) {
+            if (!err && str) {
+                // Add the universal header and footer
+                helpers.addUniversalTemplates(str, templateData, function (err, str) {
+                    if (!err && str) {
+                        // Return that page as HTML
+                        callback(200, str, 'html');
+                    } else {
+                        callback(500, undefined, 'html');
+                    }
+                })
+            } else {
+                callback(500, undefined, 'html');
+            }
+        })
+    } else {
+        callback(405, undefined, 'html');
+    }
+}
+
 // Favicon
 handlers.favicon = function (data, callback) {
     if (data.method === 'get') {
@@ -303,7 +334,7 @@ handlers._users.get = function (data, callback) {
 // Optional data: firstName, lastName, password (at least one must be specified)
 handlers._users.put = function (data, callback) {
     // Check for the required field
-    const phone = typeof (data.payload.phone) === 'number'
+    const phone = typeof (data.payload.phone) === 'string'
     && String(data.payload.phone).trim().length === 10 ? String(data.payload.phone).trim() : false;
     // Check for the optional fields
     const firstName = typeof (data.payload.firstName) === 'string'
@@ -350,7 +381,7 @@ handlers._users.put = function (data, callback) {
 
                     })
                 } else {
-                    callback(403, {'Error': 'Missing required token in header, or token is invalid  '})
+                    callback(403, {'Error': 'Missing required token in header, or token is invalid'})
                 }
             });
         } else {
@@ -416,7 +447,7 @@ handlers._users.delete = function (data, callback) {
                     }
                 })
             } else {
-                callback(403, {'Error': 'Missing required token in header, or token is invalid  '})
+                callback(403, {'Error': 'Missing required token in header, or token is invalid'})
             }
         });
     } else {
