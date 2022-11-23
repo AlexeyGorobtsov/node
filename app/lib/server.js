@@ -142,7 +142,7 @@ server.router = {
     'session/create': handlers.sessionCreate,
     'session/deleted': handlers.sessionDeleted,
     'checks/all': handlers.checkList,
-    'checks/create': handlers.cheksCreate,
+    'checks/create': handlers.checksCreate,
     'checks/edit': handlers.checksEdit,
     'ping': handlers.ping,
     'api/users': handlers.users,

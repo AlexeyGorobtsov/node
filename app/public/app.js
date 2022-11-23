@@ -75,23 +75,23 @@ app.bindLogoutButton = function () {
 }
 
 // Log the user out then redirect them
-app.logUserOut = function(redirectUser){
+app.logUserOut = function (redirectUser) {
     // Set redirectUser to default to true
-    redirectUser = typeof(redirectUser) == 'boolean' ? redirectUser : true;
+    redirectUser = typeof (redirectUser) == 'boolean' ? redirectUser : true;
 
     // Get the current token id
-    const tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
+    const tokenId = typeof (app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
 
     // Send the current token to the tokens endpoint to delete it
     const queryStringObject = {
-        'id' : tokenId
+        'id': tokenId
     };
-    app.client.request(undefined,'/api/tokens','DELETE',queryStringObject,undefined,function(statusCode,responsePayload){
+    app.client.request(undefined, '/api/tokens', 'DELETE', queryStringObject, undefined, function (statusCode, responsePayload) {
         // Set the app.config token as false
         app.setSessionToken(false);
 
         // Send the user to the logged out page
-        if(redirectUser){
+        if (redirectUser) {
             window.location = '/session/deleted';
         }
 
@@ -114,15 +114,29 @@ app.bindForms = function () {
 
             const payload = {}
             for (const [key, value] of formData.entries()) {
-                if(key === '_method') {
+                if (key === '_method') {
                     method = value;
                     continue;
                 }
                 if (key === 'tosAgreement') {
                     payload[key] = true;
-                } else {
-                    payload[key] = value;
+                    continue;
                 }
+                if (key === 'httpmethod') {
+                    payload['method'] = value;
+                    continue;
+                }
+                if (key === 'successCodes') {
+                    payload[key] = payload[key] ? payload[key] : [];
+                    payload[key].push(value);
+                    continue;
+                }
+                if (key === 'timeoutSeconds') {
+                    payload[key] = Number(value)
+                    continue;
+                }
+                payload[key] = value;
+
             }
 
             // If the method is DELETE, the payload should be a queryStringObject instead
@@ -132,26 +146,26 @@ app.bindForms = function () {
             // Call the API
             app.client.request(undefined, path, method, queryStringObject, payload, function (statusCode, responsePayload, requestPayload) {
                 // Display an error on the form if needed
-                if(statusCode !== 200){
+                if (statusCode !== 200) {
 
-                    if(statusCode === 403){
+                    if (statusCode === 403) {
                         // log the user out
                         app.logUserOut();
 
                     } else {
 
                         // Try to get the error from the api, or set a default error message
-                        let error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
+                        let error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
 
                         // Set the formError field with the error text
-                        document.querySelector("#"+formId+" .formError").innerHTML = error;
+                        document.querySelector("#" + formId + " .formError").innerHTML = error;
 
                         // Show (unhide) the form error field on the form
-                        document.querySelector("#"+formId+" .formError").style.display = 'block';
+                        document.querySelector("#" + formId + " .formError").style.display = 'block';
                     }
                 } else {
                     // If successful, send to form response processor
-                    app.formResponseProcessor(formId,payload,responsePayload);
+                    app.formResponseProcessor(formId, payload, responsePayload);
                 }
 
             })
@@ -177,7 +191,6 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
                 // Show (unhide) the form error field on the form
             } else {
                 // If successful, set the token and redirect the user
-                console.log({newResponsePayload})
                 app.setSessionToken(newResponsePayload);
                 window.location = '/checks/all';
             }
@@ -190,16 +203,21 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
         window.location = '/checks/all';
     }
 
-    // If forms saved successfully and they have success messages, show them
+    // If forms saved successfully, and they have success messages, show them
     const formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
-    if(formsWithSuccessMessages.indexOf(formId) > -1){
-        document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
+    if (formsWithSuccessMessages.indexOf(formId) > -1) {
+        document.querySelector("#" + formId + " .formSuccess").style.display = 'block';
     }
 
     // If forms saved successfully and they have success messages, show them
-    if(formId === 'accountEdit3') {
+    if (formId === 'accountEdit3') {
         app.logUserOut(false);
         window.location = '/account/deleted'
+    }
+
+    // If the user just created a new check successfully, redirect back to the dashboard
+    if (formId === 'checksCreate') {
+        window.location = '/checks/all'
     }
 }
 
@@ -278,23 +296,23 @@ app.loadDataOnPage = function () {
     const primaryClass = typeof bodyClasses[0] === "string" ? bodyClasses[0] : false;
 
     // Logic for account settings page
-    if(primaryClass === 'accountEdit') {
+    if (primaryClass === 'accountEdit') {
         app.loadAccountEditPage();
     }
 };
 
 // Load the account edit page specifically
-app.loadAccountEditPage = function (){
+app.loadAccountEditPage = function () {
     // Get the phone number from the current token, or log the user out if none is there
     const phone = typeof app.config.sessionToken.phone === 'string' ? app.config.sessionToken.phone : false;
-    if(phone) {
+    if (phone) {
         // Fetch the user data
         const queryStringObject = {
             phone: phone,
         };
-        app.client.request(undefined,'/api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+        app.client.request(undefined, '/api/users', 'GET', queryStringObject, undefined, function (statusCode, responsePayload) {
             console.log({statusCode})
-            if(statusCode === 200) {
+            if (statusCode === 200) {
                 // Put the data into the forms as values where needed
                 document.querySelector('#accountEdit1 .firstNameInput').value = responsePayload.firstName;
                 document.querySelector('#accountEdit1 .lastNameInput').value = responsePayload.lastName;
@@ -303,7 +321,7 @@ app.loadAccountEditPage = function (){
                 // Put the hidden phone field into both froms
                 const hiddenPhoneInputs = document.querySelectorAll('input.hiddenPhoneNumberInput');
                 Array.from(hiddenPhoneInputs).forEach(item => {
-                    item.value =  responsePayload.phone
+                    item.value = responsePayload.phone
                 })
             } else {
                 // If the request comes back as something other 200, log the user our (on the assumption that the api
@@ -314,7 +332,7 @@ app.loadAccountEditPage = function (){
     } else {
         app.logUserOut();
     }
- }
+}
 
 // Loop to renew token often
 

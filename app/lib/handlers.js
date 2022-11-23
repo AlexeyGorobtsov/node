@@ -208,6 +208,38 @@ handlers.accountDeleted = function (data, callback)  {
     }
 }
 
+// Create a new check
+handlers.checksCreate = function (data, callback)  {
+    // Reject any request that isn't a GET
+    if (data.method === 'get') {
+
+        // Prepare data for interpolation
+        const templateData = {
+            'head.title': 'Create a New Check',
+            'body.class': 'checksCreate',
+        }
+        // Read in a template as a string
+        helpers.getTemplate('checksCreate', templateData, function (err, str) {
+            if (!err && str) {
+                // Add the universal header and footer
+                helpers.addUniversalTemplates(str, templateData, function (err, str) {
+                    if (!err && str) {
+                        // Return that page as HTML
+                        callback(200, str, 'html');
+                    } else {
+                        callback(500, undefined, 'html');
+                    }
+                })
+            } else {
+                callback(500, undefined, 'html');
+            }
+        })
+    } else {
+        callback(405, undefined, 'html');
+    }
+}
+
+
 // Favicon
 handlers.favicon = function (data, callback) {
     if (data.method === 'get') {
@@ -517,7 +549,7 @@ handlers._tokens.post = function (data, callback) {
         // Lookup the user who mathces that phone number
         _data.read('users', phone, function (err, userData) {
             if (!err && userData) {
-                // Hash the sent password and compare it to the password stored in the user object
+                // Hash send password and compare it to the password stored in the user object
                 // Hash the password
                 const hashPassword = helpers.hash(password);
                 if (hashPassword === userData.hashPassword) {
