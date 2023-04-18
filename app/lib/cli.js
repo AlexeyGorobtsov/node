@@ -13,6 +13,8 @@ class _events extends events {
 }
 
 const e = new _events();
+const os =  require('os');
+const v8 = require('v8');
 
 // Instantiate the CLI module object
 const cli = {}
@@ -152,7 +154,43 @@ cli.responders.exit = function () {
 
 // Stats
 cli.responders.stats = function () {
-    console.log('You asked for stats');
+    // Compile an object of stats
+    const stats = {
+        'Load Average': os.loadavg().join(' '),
+        'CPU Count': os.cpus().length,
+        'Free Memory': os.freemem(),
+        'Current Malloced Memory': v8.getHeapStatistics().malloced_memory,
+        'Peak Malloced Memory': v8.getHeapStatistics().peak_malloced_memory,
+        'Allocated Heap Used (%)': Math.round((v8.getHeapStatistics().used_heap_size / v8.getHeapStatistics().total_heap_size) * 100),
+        'Available Heap Allocated (%)': Math.round((v8.getHeapStatistics().total_heap_size / v8.getHeapStatistics().heap_size_limit) * 100),
+        'Uptime': os.uptime()+ ' Seconds'
+    }
+
+     // Create a header for the stats
+    cli.horizontalLine();
+    cli.centered('SYSTEM STATISTICS');
+    cli.horizontalLine();
+    cli.verticalSpace(2);
+
+    // Show each command, followed by its explanation, in white and yellow respectively
+    for (let key in stats) {
+        if (stats.hasOwnProperty(key)) {
+            const value = stats[key];
+            let line = '\x1b[33m' + key + '\x1b[0m';
+            const padding = 60 - line.length;
+            for (let i = 0; i < padding; i++) {
+                line += ' '
+            }
+            line += value;
+            console.log(line);
+            cli.verticalSpace();
+        }
+    }
+
+    cli.verticalSpace(1);
+
+    // End with another horizontalLine
+    cli.horizontalLine();
 };
 
 // List users
