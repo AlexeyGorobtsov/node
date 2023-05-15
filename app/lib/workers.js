@@ -155,7 +155,7 @@ workers.performCheck = function (originalCheckData) {
 workers.processCheckOutcome = function (originalCheckData, checkOutcome) {
     // Decide if the check is considered up or down
     const state = !checkOutcome.error && checkOutcome.responseCode &&
-    originalCheckData.successCodes.includes(checkOutcome.responseCode) ? 'up' : 'down';
+    originalCheckData.successCodes.includes(String(checkOutcome.responseCode)) ? 'up' : 'down';
 
     // Decide if an alert is warranted
     const alertWarranted = originalCheckData.lastChecked && originalCheckData.state !== state;

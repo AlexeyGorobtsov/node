@@ -844,7 +844,7 @@ handlers._checks.post = function (data, callback) {
             }
         })
     } else {
-        callback(400, {'Error': 'Missing requred inputs, or inputs are invalid'})
+        callback(400, {'Error': 'Missing required inputs, or inputs are invalid'})
     }
 }
 

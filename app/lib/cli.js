@@ -13,7 +13,7 @@ class _events extends events {
 }
 
 const e = new _events();
-const os =  require('os');
+const os = require('os');
 const v8 = require('v8');
 const _data = require('./data');
 
@@ -164,10 +164,10 @@ cli.responders.stats = function () {
         'Peak Malloced Memory': v8.getHeapStatistics().peak_malloced_memory,
         'Allocated Heap Used (%)': Math.round((v8.getHeapStatistics().used_heap_size / v8.getHeapStatistics().total_heap_size) * 100),
         'Available Heap Allocated (%)': Math.round((v8.getHeapStatistics().total_heap_size / v8.getHeapStatistics().heap_size_limit) * 100),
-        'Uptime': os.uptime()+ ' Seconds'
+        'Uptime': os.uptime() + ' Seconds'
     }
 
-     // Create a header for the stats
+    // Create a header for the stats
     cli.horizontalLine();
     cli.centered('SYSTEM STATISTICS');
     cli.horizontalLine();
@@ -197,13 +197,13 @@ cli.responders.stats = function () {
 // List users
 cli.responders.listUsers = function () {
     _data.list('users', function (err, userIds) {
-        if(!err && userIds && userIds.length > 0) {
+        if (!err && userIds && userIds.length > 0) {
             cli.verticalSpace();
             userIds.forEach(function (userId) {
                 _data.read('users', userId, function (err, userData) {
-                    if(!err && userData) {
-                        let line = 'Name: '+userData.firstName+' '+userData.lastName+' Phone: '+ userData.phone+ ' Checks: ';
-                        const numberOfChecks = typeof userData.checks === 'object' && userData.checks instanceof Array && userData.checks.length > 0  ? userData.checks.length : 0;
+                    if (!err && userData) {
+                        let line = 'Name: ' + userData.firstName + ' ' + userData.lastName + ' Phone: ' + userData.phone + ' Checks: ';
+                        const numberOfChecks = typeof userData.checks === 'object' && userData.checks instanceof Array && userData.checks.length > 0 ? userData.checks.length : 0;
                         line += numberOfChecks;
                         console.log(line);
                         cli.verticalSpace();
@@ -219,10 +219,10 @@ cli.responders.moreUserInfo = function (str) {
     // Get the ID from the string
     const arr = str.split('--')
     const userId = typeof arr[1] === 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
-    if(userId) {
+    if (userId) {
         // Lookup the user
-        _data.read('users', userId, function (err, userData){
-            if(!err && userData) {
+        _data.read('users', userId, function (err, userData) {
+            if (!err && userData) {
                 // Remove the hashed password
                 delete userData.hashPassword;
 
@@ -238,7 +238,28 @@ cli.responders.moreUserInfo = function (str) {
 
 // List checks
 cli.responders.listChecks = function (str) {
-    console.log('You asked to list checks', str);
+    _data.list('checks', function (err, checkIds) {
+        if (!err && checkIds && checkIds.length > 0) {
+            cli.verticalSpace();
+            checkIds.forEach(function (checkId) {
+                _data.read('checks', checkId, function (err, checkData) {
+                    let includeCheck = false;
+                    const lowerString = str.toLocaleString();
+                    // Get the state, default to down
+                    const state = typeof checkData.state === 'string' ? checkData.state : 'down';
+                    // Get the state, default to unknown
+                    const stateOrUnknown = typeof checkData.state === 'string' ? checkData.state : 'unknown';
+                    // If the user has specified the state, or hasn't specified any state, include the current check accordingly
+                    if(lowerString.indexOf('--'+state) > -1 || lowerString.indexOf('--down') &&  lowerString.indexOf('--up') === -1) {
+                        const line = 'ID: '+checkData.id+' '+checkData.method.toUpperCase()+ ' '+checkData.protocol+'://'+checkData.url+' State: '+stateOrUnknown;
+                        console.log(line);
+                        cli.verticalSpace();
+                    }
+                })
+            })
+        }
+
+    })
 };
 
 // More check info
