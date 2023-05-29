@@ -233,7 +233,6 @@ cli.responders.moreUserInfo = function (str) {
             }
         })
     }
-
 };
 
 // List checks
@@ -264,7 +263,20 @@ cli.responders.listChecks = function (str) {
 
 // More check info
 cli.responders.moreCheckInfo = function (str) {
-    console.log('You asked for more check info', str);
+    // Get the ID from the string
+    const arr = str.split('--')
+    const chceckId = typeof arr[1] === 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
+    if (chceckId) {
+        // Lookup the check
+        _data.read('checks', chceckId, function (err, checkData) {
+            if (!err && checkData) {
+                // Print the JSON with text highlighting
+                cli.verticalSpace();
+                console.dir(checkData, {'colors': true});
+                cli.verticalSpace();
+            }
+        })
+    }
 };
 
 // List logs
