@@ -16,6 +16,7 @@ const e = new _events();
 const os = require('os');
 const v8 = require('v8');
 const _data = require('./data');
+const _logs = require('./logs');
 
 // Instantiate the CLI module object
 const cli = {}
@@ -77,7 +78,7 @@ cli.responders.help = function () {
         'more user info --{userId}': 'Show details of a specific user',
         'list checks --up --down': 'Show a list of all the active checks in the system, including their state. The "--up" and the "--down" flags are both optional',
         'more check info --{checkId}': 'Show details of a specified check',
-        'list logs': 'Show a list of all the log files available to be read (compressed and uncompressed)',
+        'list logs': 'Show a list of all the log files available to be read (compressed only)',
         'more log info --{fileName}': 'Show details of a specified log file',
     }
 
@@ -265,10 +266,10 @@ cli.responders.listChecks = function (str) {
 cli.responders.moreCheckInfo = function (str) {
     // Get the ID from the string
     const arr = str.split('--')
-    const chceckId = typeof arr[1] === 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
-    if (chceckId) {
+    const checkId = typeof arr[1] === 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
+    if (checkId) {
         // Lookup the check
-        _data.read('checks', chceckId, function (err, checkData) {
+        _data.read('checks', checkId, function (err, checkData) {
             if (!err && checkData) {
                 // Print the JSON with text highlighting
                 cli.verticalSpace();
@@ -281,7 +282,18 @@ cli.responders.moreCheckInfo = function (str) {
 
 // List logs
 cli.responders.listLogs = function () {
-    console.log('You asked to list logs');
+    _logs.list(true, function (err, logFileNames) {
+        if(!err && logFileNames && logFileNames.length > 0) {
+            cli.verticalSpace();
+            logFileNames.forEach(function (logFileName) {
+                if(logFileName.indexOf('-') > -1) {
+                    console.log(logFileName);
+                    cli.verticalSpace();
+                }
+
+            })
+        }
+    })
 };
 
 // More logs info
