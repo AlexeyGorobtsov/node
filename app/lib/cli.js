@@ -17,6 +17,7 @@ const os = require('os');
 const v8 = require('v8');
 const _data = require('./data');
 const _logs = require('./logs');
+const helpers = require('./helpers');
 
 // Instantiate the CLI module object
 const cli = {}
@@ -298,7 +299,26 @@ cli.responders.listLogs = function () {
 
 // More logs info
 cli.responders.moreLogsInfo = function (str) {
-    console.log('You asked for more logs info', str);
+    // Get the logFileName from the string
+    const arr = str.split('--')
+    const logFileName = typeof arr[1] === 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
+    if (logFileName) {
+        cli.verticalSpace();
+        // Decompress the log
+        _logs.decompress(logFileName, function (err, strData) {
+            if(!err && strData) {
+                // Split into lines
+                const arr = strData.split('\n');
+                arr.forEach(function (jsonString) {
+                    const logObject = helpers.parseJsonToObject(jsonString);
+                    if(logObject && JSON.stringify(logObject) !== '{}') {
+                        console.dir(logObject, {'colors': true});
+                        cli.verticalSpace();
+                    }
+                })
+            }
+        })
+    }
 };
 
 // Input processor
