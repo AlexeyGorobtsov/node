@@ -357,6 +357,12 @@ handlers.public = function (data, callback) {
  * JSON API Handlers
  */
 
+// Example error
+handlers.exampleError = function (data, callback) {
+    const err = new Error('This is an example error');
+    throw(err);
+}
+
 // Users
 handlers.users = function (data, callback) {
     const acceptableMethods = ['post', 'get', 'put', 'delete'];

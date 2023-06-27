@@ -1,1 +1,1 @@
-{"check":{"id":"u3i9re5lydiizgcdzshz","userPhone":"4151234568","protocol":"https","url":"vk.com","method":"get","successCodes":["302"],"timeoutSeconds":2,"state":"up","lastChecked":1685387660057},"outcome":{"error":false,"responseCode":302},"state":"up","alert":false,"time":1685388148958}
+{"check":{"id":"u3i9re5lydiizgcdzshz","userPhone":"4151234568","protocol":"https","url":"vk.com","method":"get","successCodes":["302"],"timeoutSeconds":2,"state":"up","lastChecked":1687897618591},"outcome":{"error":false,"responseCode":302},"state":"up","alert":false,"time":1687897684488}
