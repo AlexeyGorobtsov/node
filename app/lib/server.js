@@ -177,8 +177,6 @@ server.init = function () {
     server.httpsServer.listen(config.httpsPort, function () {
         console.log('\x1b[35m%s\x1b[0m', `The Server is listening on port ${config.httpsPort} in ${config.envName} now`);
     });
-
-
 }
 
 // Export the module
